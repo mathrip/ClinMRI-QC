@@ -54,7 +54,7 @@ def detect_contrast_enhancement(
     image: np.ndarray,
     brain_mask: np.ndarray,
     vessel_ratio_threshold: float = 1.6,
-    bright_fraction_threshold: float = 0.003,
+    bright_fraction_threshold: float = 0.002,
 ) -> dict:
     """Detect gadolinium contrast enhancement from a single T1w image.
 
