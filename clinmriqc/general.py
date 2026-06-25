@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np 
 import nibabel
+import tempfile
 
 def load_nifti (path:str) -> np.ndarray: 
     img = nibabel.load(path)
@@ -10,16 +11,22 @@ def load_nifti (path:str) -> np.ndarray:
     return data 
 
 
-def get_brain_mask(path:str, outfile=None) -> np.ndarray: 
+import nibabel as nib
+from scipy.ndimage import zoom
+
+def get_brain_mask(path: str, outfile=None) -> np.ndarray:
     import brainchop as bc
-    # Load, skull-strip, save
+    from brainchop.cli import _save_inverse_conform
+
     vol = bc.load(path)
-    brain_stripped = bc.segment(vol, "mindgrab")
-    mask = (brain_stripped.data.numpy()>0).astype(bool)
-    if not outfile is None:
-        bc.save(mask, outfile)
-        print(f'Saved brain mask in {outfile}')
-    return mask
+    brain_mask = bc.segment(vol, "mindgrab")
+ 
+    if outfile is None:
+        outfile = tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False)
+    
+    _save_inverse_conform(brain_mask, path, outfile.name)
+    
+    mask = load_nifti(outfile.name)
 
+    return (mask>0).astype(bool)
 
-# %%
