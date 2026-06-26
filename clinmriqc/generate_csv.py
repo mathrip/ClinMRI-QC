@@ -20,6 +20,8 @@ Usage
 from datetime import datetime
 from pathlib import Path
 
+import nibabel as nib
+
 from clinmriqc.schema import ALL_COLUMNS, ARTIFACT_CLASSES
 
 
@@ -29,6 +31,7 @@ def build_qc_record(
     artifacts: dict = None,
     contrast: dict = None,
     coreg: dict = None,
+    fov: dict = None,
     meta: dict = None,
     timestamp: str = None,
 ) -> dict:
@@ -41,6 +44,7 @@ def build_qc_record(
     artifacts   : dict returned by detect_artifacts(), or None.
     contrast    : dict returned by detect_contrast_enhancement(), or None.
     coreg       : dict returned by registration_qc(), or None.
+    fov         : dict returned by check_fov(), or None.
     meta        : dict returned by metaqc.run_qc(), or None.
     timestamp   : ISO datetime string; defaults to now.
 
@@ -52,6 +56,20 @@ def build_qc_record(
     record['timestamp']  = timestamp or datetime.now().strftime('%Y-%m-%d %H:%M')
     record['scan_path']  = str(image_path)
     record['patient_id'] = patient_id or Path(image_path).stem
+
+    try:
+        _img  = nib.load(str(image_path))
+        _dims = _img.header.get_data_shape()
+        _zooms = _img.header.get_zooms()
+        record['img_dim_x']      = int(_dims[0]) if len(_dims) > 0 else ''
+        record['img_dim_y']      = int(_dims[1]) if len(_dims) > 1 else ''
+        record['img_dim_z']      = int(_dims[2]) if len(_dims) > 2 else ''
+        record['img_vox_x']      = round(float(_zooms[0]), 4) if len(_zooms) > 0 else ''
+        record['img_vox_y']      = round(float(_zooms[1]), 4) if len(_zooms) > 1 else ''
+        record['img_vox_z']      = round(float(_zooms[2]), 4) if len(_zooms) > 2 else ''
+        record['img_orientation'] = ''.join(nib.aff2axcodes(_img.affine))
+    except Exception:
+        pass
 
     if artifacts is not None:
         # Prefer scaled [0,1] severity (regression model output after calibration).
@@ -83,6 +101,14 @@ def build_qc_record(
         passed = coreg.get('passed', {})
         record['coreg_ssim_passed'] = passed.get('ssim', '')
         record['coreg_ncc_passed']  = passed.get('ncc', '')
+
+    if fov is not None:
+        record['fov_overall'] = fov.get('Overall', '')
+        def _join(v):
+            return '|'.join(v) if isinstance(v, list) else str(v)
+        record['fov_check1'] = _join(fov.get('Check 1 (scan edge proximity)', []))
+        record['fov_check2'] = _join(fov.get('Check 2 (margin proximity)', []))
+        record['fov_check3'] = _join(fov.get('Check 3 (distance check)', []))
 
     if meta is not None:
         record['metaqc_status']   = meta.get('status', '')
