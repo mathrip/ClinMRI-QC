@@ -176,7 +176,6 @@ def process_scan(img_path: Path, device: str, cfg: dict, ref_path: Path, mask_pa
         str(img_path), image, brain_mask=brain_mask, thresholds=meta_cfg,
     )
 
-    print(meta)
     return art, con, coreg, meta, fov
 
 
@@ -250,6 +249,7 @@ def run(
                 contrast=con,
                 meta=meta,
                 coreg=coreg,
+                fov=fov
             )
             append_csv_record(record, str(csv_path))
 
