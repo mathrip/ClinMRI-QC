@@ -6,13 +6,13 @@ from scipy.ndimage import binary_fill_holes
 
 
 
-def check_fov(input_scan, brain_mask, margin_threshold=5):
+def check_fov(input_scan: str, brain_mask: str, margin_threshold: int = 5) -> dict:
     """
     Check whether an MRI scan has full field-of-view (FOV).
 
     Args:
-        input_scan (np.ndarray): 3D boolean array of scan signal (data > 0).
-        brain_mask (np.ndarray): 3D boolean array of brain mask (data > 0).
+        input_scan (str): Path to input nifti scan.
+        brain_mask (str): Path to brain mask.
         margin_threshold (int): Minimum mm between mask and scan edge. Defaults to 5.
 
     Returns:
