@@ -18,7 +18,7 @@ BRIGHT_FRACTION_THRESHOLD = 0.002
 
 def process_image(image: str) -> dict:
     print(f"Processing: {image}")
-    image_arr = load_nifti(image)
+    image_arr, _ = load_nifti(image)
     mask_arr = get_brain_mask(image)
     results = detect_contrast_enhancement(
         image_arr, mask_arr,
@@ -29,7 +29,6 @@ def process_image(image: str) -> dict:
     results["path"] = image
     results["contrast"] = "T1WKS" in Path(image).name
     return results
-
 
 def run_batch(folder: str, subject_filter: list[str] | None = None) -> pd.DataFrame:
     subjects = [s for s in os.listdir(folder) if "patient" in s]
@@ -64,11 +63,11 @@ def summarise(df: pd.DataFrame) -> pd.DataFrame:
     })
 
 
-# %% TEST ON RAW DATA
-folder_raw = "/Users/mathilderipart/Documents/work/260624_BMEIS_hackathon/open_ms_data/cross_sectional/coregistered"
-df_raw = run_batch(folder_raw)
-out = summarise(df_raw)
-print(out)
+# # %% TEST ON RAW DATA
+# folder_raw = "/Users/mathilderipart/Documents/work/260624_BMEIS_hackathon/open_ms_data/cross_sectional/coregistered"
+# df_raw = run_batch(folder_raw)
+# out = summarise(df_raw)
+# print(out)
 
 # %% TEST ON SYNTHETIC ARTEFACTS DATA
 folder_art = "/Users/mathilderipart/Documents/work/260624_BMEIS_hackathon/open_ms_data_artefacts/cross_sectional/coregistered"
