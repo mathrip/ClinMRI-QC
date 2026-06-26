@@ -8,11 +8,11 @@
     "model_path": "clinmriqc/classifier/best_regression_model.pt",
     "threshold": 0.5,
     "class_thresholds": {
-      "motion":     0.0956,
-      "noise":      0.3269,
-      "ghosting":   0.3456,
+      "motion":     0.1500,
+      "noise":      0.3800,
+      "ghosting":   0.4500,
       "bias_field": 0.8818,
-      "gibbs":      0.0568,
+      "gibbs":      0.1000,
       "zipper":     0.0305
     }
   },
