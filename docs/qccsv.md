@@ -86,9 +86,13 @@ Sanity checks on image geometry and intensity, independent of the model.
 
 ## 6. Field of view QC 
 
+Checks whether the brain is cropped. Passes if 2/3 checks are passed.
 
 | Column | Description |
 |--------|-------------|
+| `Check 1` | Checks whether the brain mask touches the edges of the scan |
+| `Check 2` | Checks whether the brain mask is within 5mm of the edges of the scan |
+| `Check 3` | Checks the minimum distance between the brain mask and the scan signal. Fails if minimum distance is 0 voxels |
 
 
 ---
@@ -100,4 +104,5 @@ A scan is considered to have **passed** when all of the following are true:
 - `metaqc_status` is `pass`
 - `metaqc_metadata_status` is `pass`
 - `coreg_flag` is `GREEN`
+- `overall` is `Passed`
 
