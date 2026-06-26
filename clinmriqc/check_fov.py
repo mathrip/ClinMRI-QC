@@ -6,7 +6,7 @@ from scipy.ndimage import binary_fill_holes
 from clinmriqc.general import load_nifti
 
 
-def check_fov(input_scan: str, brain_mask: str, margin_threshold: int = 5) -> dict:
+def check_fov(data_scan: np.array, data_mask: np.array, img_header, margin_threshold: int = 5) -> dict:
     """
     Check whether an MRI scan has full field-of-view (FOV).
 
@@ -24,12 +24,10 @@ def check_fov(input_scan: str, brain_mask: str, margin_threshold: int = 5) -> di
     """
     # print(f"Checking FOV for scan: {input_scan}")
     # get brain mask
-    data_mask, _= load_nifti(brain_mask)
     mask = data_mask > 0
 
 
     # get scan signal (non-zero voxels)
-    data_scan, img_scan = load_nifti(input_scan)
     scan_signal = data_scan > 0
 
     # fill holes in scan signal
@@ -58,7 +56,7 @@ def check_fov(input_scan: str, brain_mask: str, margin_threshold: int = 5) -> di
     cutoff_axes_2 = []
 
     # convert 5mm margin to voxels 
-    voxel_spacing = img_scan.header.get_zooms()[:3]
+    voxel_spacing = img_header.get_zooms()[:3]
     # print(f"voxel spacing: {voxel_spacing} mm")
     margin_threshold_vox  = int(round(margin_threshold / voxel_spacing[0])) 
 

@@ -20,9 +20,8 @@
     "ssim_threshold": 0.70,
     "ncc_threshold": 0.80
   },
-  "check_crop": {
-    "fov_threshold_fraction": 0.01,
-    "brain_min_coverage": 0.95
+  "check_fov": {
+    "margin_threshold": 5
   },
   "check_metadata": {
     "min_voxel_size_mm": 0.1,

@@ -99,7 +99,7 @@ def process_scan(img_path: Path, device: str, cfg: dict, ref_path: Path, mask_pa
     Returns:
         (artifacts_result, contrast_result, metaqc_result)
     """
-    image, _ = load_nifti(str(img_path))
+    image, image_nib = load_nifti(str(img_path))
 
     # Skull-strip via brainchop. get_brain_mask uses _save_inverse_conform so
     # the returned mask is already at native image resolution.
@@ -163,6 +163,7 @@ def process_scan(img_path: Path, device: str, cfg: dict, ref_path: Path, mask_pa
     fov = check_fov(
         image,
         brain_mask,
+        image_nib.header,
         margin_threshold=con_cfg["margin_threshold"],
     )
 
@@ -189,6 +190,7 @@ def run(
     exclude_prefix: str,
     config_path: str | None = None,
     ref_path: str = None,
+    mask_path: str = None
 ):
     cfg = load_config(config_path)
     _log(f'Config loaded from {config_path or "default"}')
@@ -230,7 +232,7 @@ def run(
 
         t0 = time.time()
         try:
-            art, con, coreg, meta, fov= process_scan(img_path, device, cfg,ref_path=ref_path)
+            art, con, coreg, meta, fov= process_scan(img_path, device, cfg,ref_path=ref_path, mask_path=mask_path)
 
             record = build_qc_record(
                 image_path=img_path,
