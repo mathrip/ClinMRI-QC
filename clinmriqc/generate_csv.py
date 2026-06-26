@@ -20,8 +20,6 @@ Usage
 from datetime import datetime
 from pathlib import Path
 
-import nibabel as nib
-
 from clinmriqc.schema import ALL_COLUMNS, ARTIFACT_CLASSES
 
 
@@ -56,20 +54,6 @@ def build_qc_record(
     record['timestamp']  = timestamp or datetime.now().strftime('%Y-%m-%d %H:%M')
     record['scan_path']  = str(image_path)
     record['patient_id'] = patient_id or Path(image_path).stem
-
-    try:
-        _img  = nib.load(str(image_path))
-        _dims = _img.header.get_data_shape()
-        _zooms = _img.header.get_zooms()
-        record['img_dim_x']      = int(_dims[0]) if len(_dims) > 0 else ''
-        record['img_dim_y']      = int(_dims[1]) if len(_dims) > 1 else ''
-        record['img_dim_z']      = int(_dims[2]) if len(_dims) > 2 else ''
-        record['img_vox_x']      = round(float(_zooms[0]), 4) if len(_zooms) > 0 else ''
-        record['img_vox_y']      = round(float(_zooms[1]), 4) if len(_zooms) > 1 else ''
-        record['img_vox_z']      = round(float(_zooms[2]), 4) if len(_zooms) > 2 else ''
-        record['img_orientation'] = ''.join(nib.aff2axcodes(_img.affine))
-    except Exception:
-        pass
 
     if artifacts is not None:
         # Prefer scaled [0,1] severity (regression model output after calibration).
@@ -121,5 +105,34 @@ def build_qc_record(
         record['metaqc_centroid_offset_mm']  = features.get('centroid_offset_mm', '')
         meta_qc = meta.get('metadata_qc', {})
         record['metaqc_metadata_status'] = meta_qc.get('status', '')
+
+        # Image geometry is already extracted by metaqc.extract_metadata() — reuse
+        # it rather than reloading the NIfTI.
+        hdr_meta = meta_qc.get('metadata', {})
+        shape  = hdr_meta.get('shape') or []
+        zooms  = hdr_meta.get('voxel_spacing') or []
+        record['img_dim_x']       = int(shape[0]) if len(shape) > 0 else ''
+        record['img_dim_y']       = int(shape[1]) if len(shape) > 1 else ''
+        record['img_dim_z']       = int(shape[2]) if len(shape) > 2 else ''
+        record['img_vox_x']       = zooms[0] if len(zooms) > 0 else ''
+        record['img_vox_y']       = zooms[1] if len(zooms) > 1 else ''
+        record['img_vox_z']       = zooms[2] if len(zooms) > 2 else ''
+        record['img_orientation'] = hdr_meta.get('orientation', '')
+    else:
+        # Fallback: header-only read (no voxel data loaded) when metaqc not run.
+        try:
+            import nibabel as nib
+            _img  = nib.load(str(image_path))
+            _dims = _img.header.get_data_shape()
+            _zooms = _img.header.get_zooms()
+            record['img_dim_x']       = int(_dims[0]) if len(_dims) > 0 else ''
+            record['img_dim_y']       = int(_dims[1]) if len(_dims) > 1 else ''
+            record['img_dim_z']       = int(_dims[2]) if len(_dims) > 2 else ''
+            record['img_vox_x']       = round(float(_zooms[0]), 4) if len(_zooms) > 0 else ''
+            record['img_vox_y']       = round(float(_zooms[1]), 4) if len(_zooms) > 1 else ''
+            record['img_vox_z']       = round(float(_zooms[2]), 4) if len(_zooms) > 2 else ''
+            record['img_orientation'] = ''.join(nib.aff2axcodes(_img.affine))
+        except Exception:
+            pass
 
     return record
